@@ -19,13 +19,13 @@ export interface ComparisonResult {
 
 export async function compareCloudProducts(awsInput: string, gcpInput: string): Promise<ComparisonResult | null> {
   // 1. 환경 변수 확인 (보안을 위해 실제 운영 환경에서는 키 전체를 로그에 찍지 않는 것이 좋습니다)
-  if (!import.meta.env.VITE_GEMINI_API_KEY) {
+  if (!process.env.VITE_GEMINI_API_KEY) {
     console.error("Error: VITE_GEMINI_API_KEY가 설정되지 않았습니다.");
     return null;
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.VITE_GEMINI_API_KEY });
     const model = ai.getGenerativeModel({ model: "gemini-3-flash-preview" }); 
 
     const prompt = `
