@@ -39,7 +39,9 @@ env:
   REGION: 'us-central1' # TODO: update to your region
   SERVICE: 'cloud-comparison-hub' # TODO: update to your service name
   VITE_GEMINI_API_KEY: '${{ secrets.VITE_GEMINI_API_KEY }}'
-  
+  NODE_ENV: 'production'
+  PORT: '8080'
+
 jobs:
   deploy:
     runs-on: 'ubuntu-latest'
