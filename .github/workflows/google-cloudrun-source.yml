@@ -38,7 +38,7 @@ env:
   PROJECT_ID: 'cloudblog-mailing' # TODO: update to your Google Cloud project ID
   REGION: 'us-central1' # TODO: update to your region
   SERVICE: 'cloud-comparison-hub' # TODO: update to your service name
-  GEMINI_API_KEY: '${{ secrets.VITE_GEMINI_API_KEY }}'
+  VITE_GEMINI_API_KEY: '${{ secrets.VITE_GEMINI_API_KEY }}'
   
 jobs:
   deploy:
