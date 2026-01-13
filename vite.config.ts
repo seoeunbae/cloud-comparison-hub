@@ -8,7 +8,7 @@ export default defineConfig(({mode}) => {
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      'import.meta.env.GEMINI_API_KEY': JSON.stringify(import.meta.env.VITE_GEMINI_API_KEY),
+      'import.meta.env.GEMINI_API_KEY': JSON.stringify(process.env.VITE_GEMINI_API_KEY),
       // Expose all VITE_ prefixed environment variables to client-side code
       ...Object.fromEntries(
         Object.entries(env)
