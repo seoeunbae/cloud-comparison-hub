@@ -2,7 +2,8 @@
 
 > **AWS와 GCP의 복잡한 서비스들, 이제 한눈에 비교하고 최적의 아키텍처를 설계하세요.**
 
-![Cloud Comparison Hub Main](https://picsum.photos/seed/cloud-hub/1200/600?blur=2)
+<img width="1140" height="557" alt="Screenshot 2026-01-13 at 11 36 38 AM" src="https://github.com/user-attachments/assets/b669bf35-9f5e-4061-ba96-8e7202fdae2a" />
+
 
 ---
 
@@ -36,11 +37,17 @@
 ## 📸 서비스 화면 (Screenshots)
 
 ### 1. 메인 화면 (Main Dashboard)
-![Main Screen Placeholder](https://picsum.photos/seed/main-ui/800/450)
+
+<img width="955" height="445" alt="image" src="https://github.com/user-attachments/assets/05d146a5-1533-4f58-8315-1f517cdb318e" />
+
+
 *깔끔하고 현대적인 글래스모피즘 디자인의 입력 인터페이스를 제공합니다.*
 
 ### 2. 비교 결과 화면 (Analysis Result)
-![Result Screen Placeholder](https://picsum.photos/seed/result-ui/800/450)
+
+<img width="1141" height="699" alt="image" src="https://github.com/user-attachments/assets/274612b5-72bd-4c7b-ab73-23e710425d5a" />
+
+
 *유사점, 차이점, 활용 사례가 카드 형태로 구조화되어 한눈에 들어옵니다.*
 
 ---
