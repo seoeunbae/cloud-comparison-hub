@@ -9,10 +9,16 @@ export default defineConfig(({mode}) => {
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      // Expose all VITE_ prefixed environment variables to client-side code
+      ...Object.fromEntries(
+        Object.entries(env)
+          .filter(([key]) => key.startsWith('VITE_'))
+          .map(([key, value]) => [`process.env.${key}`, JSON.stringify(value)])
+      ),
     },
     resolve: {
       alias: {
-        '@': resolve(__dirname, './cloud-comparison-hub/src')
+        '@': resolve(__dirname, './src')
       },
     },
   };

@@ -26,7 +26,7 @@ export async function compareCloudProducts(awsInput: string, gcpInput: string): 
 
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    const model = ai.getGenerativeModel({ model: "gemini-3-flash-preview" }); // 모델 인스턴스 생성 방식 수정
+    const model = ai.getGenerativeModel({ model: "gemini-3-flash-preview" }); 
 
     const prompt = `
       Compare the following two cloud products:

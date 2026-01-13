@@ -23,10 +23,14 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
+      console.log("before_comparecloudprodcuts-func");
       const data = await compareCloudProducts(awsInput, gcpInput);
+      console.log("after comparecloudproducts-func");
+      console.log(data);
       setResult(data);
+      
     } catch (err) {
-      console.error(err);
+      console.log(err);
       setError('Failed to compare products. Please try again.');
     } finally {
       setLoading(false);
