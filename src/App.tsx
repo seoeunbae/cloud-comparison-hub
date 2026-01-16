@@ -1,20 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Cloud, Search, ArrowRightLeft, Info, CheckCircle2, XCircle, Github, Loader2, Sparkles } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { compareCloudProducts, type ComparisonResult } from './services/geminiService';
+import { Trie, awsServices, gcpServices } from './utils/trie';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Initialize Tries
+const awsTrie = new Trie();
+awsServices.forEach(s => awsTrie.insert(s));
+
+const gcpTrie = new Trie();
+gcpServices.forEach(s => gcpTrie.insert(s));
+
 export default function App() {
   const [awsInput, setAwsInput] = useState('');
   const [gcpInput, setGcpInput] = useState('');
+  const [awsSuggestions, setAwsSuggestions] = useState<string[]>([]);
+  const [gcpSuggestions, setGcpSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const awsRef = useRef<HTMLDivElement>(null);
+  const gcpRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (awsRef.current && !awsRef.current.contains(event.target as Node)) {
+        setAwsSuggestions([]);
+      }
+      if (gcpRef.current && !gcpRef.current.contains(event.target as Node)) {
+        setGcpSuggestions([]);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleAwsChange = (val: string) => {
+    setAwsInput(val);
+    if (val.trim().length > 0) {
+      setAwsSuggestions(awsTrie.search(val).slice(0, 5));
+    } else {
+      setAwsSuggestions([]);
+    }
+  };
+
+  const handleGcpChange = (val: string) => {
+    setGcpInput(val);
+    if (val.trim().length > 0) {
+      setGcpSuggestions(gcpTrie.search(val).slice(0, 5));
+    } else {
+      setGcpSuggestions([]);
+    }
+  };
 
   const handleCompare = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,16 +66,21 @@ export default function App() {
 
     setLoading(true);
     setError(null);
+    setResult(null);
+    setAwsSuggestions([]);
+    setGcpSuggestions([]);
+
     try {
-      console.log("before_comparecloudprodcuts-func");
+      // API 키 존재 여부 확인
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY가 설정되지 않았습니다. 서버 환경 변수를 확인해주세요.');
+      }
+
       const data = await compareCloudProducts(awsInput, gcpInput);
-      console.log("after comparecloudproducts-func");
-      console.log(data);
       setResult(data);
-      
-    } catch (err) {
-      console.log(err);
-      setError('Failed to compare products. Please try again.');
+    } catch (err: any) {
+      console.error('Comparison error:', err);
+      setError(err.message || '제품 비교 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
@@ -72,8 +121,8 @@ export default function App() {
           className="glass-card p-6 md:p-8 mb-12"
         >
           <form onSubmit={handleCompare} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              <div className="space-y-2 relative" ref={awsRef}>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                   <div className="w-6 h-6 rounded bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold">AWS</div>
                   AWS 제품명
@@ -82,15 +131,47 @@ export default function App() {
                   <input
                     type="text"
                     value={awsInput}
-                    onChange={(e) => setAwsInput(e.target.value)}
+                    onChange={(e) => handleAwsChange(e.target.value)}
                     placeholder="예: EC2, Lambda, S3"
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none"
                     required
                   />
+                  <AnimatePresence>
+                    {awsSuggestions.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden"
+                      >
+                        {awsSuggestions.map((s) => {
+                          const [name, category] = s.split(' (');
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => {
+                                setAwsInput(s);
+                                setAwsSuggestions([]);
+                              }}
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-orange-50 text-slate-700 transition-colors flex justify-between items-center"
+                            >
+                              <span>{name}</span>
+                              {category && (
+                                <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                  {category.replace(')', '')}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 relative" ref={gcpRef}>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                   <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold">GCP</div>
                   GCP 제품명
@@ -99,18 +180,49 @@ export default function App() {
                   <input
                     type="text"
                     value={gcpInput}
-                    onChange={(e) => setGcpInput(e.target.value)}
+                    onChange={(e) => handleGcpChange(e.target.value)}
                     placeholder="예: Compute Engine, Cloud Functions, GCS"
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                     required
                   />
+                  <AnimatePresence>
+                    {gcpSuggestions.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden"
+                      >
+                        {gcpSuggestions.map((s) => {
+                          const [name, category] = s.split(' (');
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => {
+                                setGcpInput(s);
+                                setGcpSuggestions([]);
+                              }}
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 text-slate-700 transition-colors flex justify-between items-center"
+                            >
+                              <span>{name}</span>
+                              {category && (
+                                <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                  {category.replace(')', '')}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
 
             <div className="flex justify-center">
               <motion.button
-                type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 disabled={loading}

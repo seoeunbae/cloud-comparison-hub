@@ -1,4 +1,4 @@
-# # Build stage
+# Build stage
 FROM node:20-slim AS build
 
 WORKDIR /app
@@ -14,19 +14,21 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Install production dependencies only
 COPY package*.json ./
 RUN npm install --production
 
+# Copy built assets and server code
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/server.ts ./
 COPY --from=build /app/tsconfig.json ./
 
-# Install tsx to run the server
-RUN npm install -g tsx
+# tsx and typescript are needed to run server.ts
+RUN npm install tsx typescript
 
 ENV NODE_ENV=production
 ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["tsx", "server.ts"]
+CMD ["npx", "tsx", "server.ts"]
