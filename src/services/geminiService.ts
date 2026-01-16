@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 export interface ComparisonResult {
   awsProduct: {
@@ -19,14 +19,16 @@ export interface ComparisonResult {
 
 export async function compareCloudProducts(awsInput: string, gcpInput: string): Promise<ComparisonResult | null> {
   // 1. 환경 변수 확인 (보안을 위해 실제 운영 환경에서는 키 전체를 로그에 찍지 않는 것이 좋습니다)
+  console.log(import.meta.env.VITE_GEMINI_API_KEY)
+
   if (!import.meta.env.VITE_GEMINI_API_KEY) {
     console.error("Error: VITE_GEMINI_API_KEY가 설정되지 않았습니다.");
     return null;
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.VITE_GEMINI_API_KEY });
-    const model = ai.getGenerativeModel({ model: "gemini-3-flash-preview" }); 
+    const ai = new GoogleGenerativeAI( import.meta.env.VITE_GEMINI_API_KEY );
+    
 
     const prompt = `
       Compare the following two cloud products:
@@ -41,43 +43,45 @@ export async function compareCloudProducts(awsInput: string, gcpInput: string): 
       5. Be objective and technical.
       6. ALL RESPONSES MUST BE IN KOREAN (한국어로 답변하세요).
     `;
+    
 
-    // API 호출
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    const model = await ai.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      // contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.OBJECT,
+          type: SchemaType.OBJECT,
           properties: {
             awsProduct: {
-              type: Type.OBJECT,
+              type: SchemaType.OBJECT,
               properties: {
-                name: { type: Type.STRING },
-                isValid: { type: Type.BOOLEAN },
-                description: { type: Type.STRING }
+                name: { type: SchemaType.STRING },
+                isValid: { type: SchemaType.BOOLEAN },
+                description: { type: SchemaType.STRING }
               },
               required: ["name", "isValid", "description"]
             },
             gcpProduct: {
-              type: Type.OBJECT,
+              type: SchemaType.OBJECT,
               properties: {
-                name: { type: Type.STRING },
-                isValid: { type: Type.BOOLEAN },
-                description: { type: Type.STRING }
+                name: { type: SchemaType.STRING },
+                isValid: { type: SchemaType.BOOLEAN },
+                description: { type: SchemaType.STRING }
               },
               required: ["name", "isValid", "description"]
             },
-            similarities: { type: Type.ARRAY, items: { type: Type.STRING } },
-            differences: { type: Type.ARRAY, items: { type: Type.STRING } },
-            useCases: { type: Type.ARRAY, items: { type: Type.STRING } },
-            summary: { type: Type.STRING }
+            similarities: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+            differences: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+            useCases: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+            summary: { type: SchemaType.STRING }
           },
           required: ["awsProduct", "gcpProduct", "similarities", "differences", "useCases", "summary"]
         }
       }
     });
 
+    const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
     if (!responseText) {
